@@ -27,7 +27,7 @@ Due to the sensitive nature of the data, we cannot provide individual-level meta
 
 ### Genomes
 
-FASTA files can be found here: X. Note that all sequences are identified due to privacy reasons.
+FASTA files can be found here: X. Note that all sequences are de-identified due to privacy reasons.
 
 ## Software overview
 
