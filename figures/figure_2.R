@@ -1,4 +1,4 @@
-#Figure 2, Plotting Placement of Mutations and Substitutions
+# Figure 2: Visualizing the locations of mutations and changes
 
 # read packages
 library(ape); library(phytools); library(TreeTools); library(dplyr);
@@ -9,13 +9,12 @@ library(Rcpp); library(purrr); library(tidyr); library(furrr); library(future); 
 library(seqinr); library(adegenet); library(ggplot2); library(viridis); library(lme4); library(broom.mixed); 
 library(brms); library(viridis); library(patchwork); library(openxlsx); library(dplyr); library(gridExtra); library(ggpubr)
 
+
 # Reading in data -----------
 all_without_ct_changes_df <- readRDS("")
 updated_metadata_with_dnds_counts_and_totals_all_without_ct <- readRDS("")
 
-# Comparing all consecutive sequences ---------------
-
-# Comparing all consecutive sequences: Summarizing placements of mutations ---------------
+# ALL: Summarizing placements of mutations ---------------
 full_coding_regions <- data.frame(
   region = c("ORF1a", "ORF1b", "S", "ORF3a", "E", "M", "ORF6", "ORF7a", "ORF7b", "ORF8", "N", "ORF10"),
   start = c(266, 13468, 21563, 25393, 26245, 26523, 27202, 27394, 27756, 27894, 28274, 29558),
@@ -92,7 +91,7 @@ plot_histogram_by_region <- function(region_summary) {
   ggplot(region_summary, aes(x = region, y = mutation_count, fill = major_scorpio_call)) +
     geom_bar(stat = "identity", position = "stack") +
     scale_fill_viridis_d(option = "D") +  # Applying Viridis colors
-    theme_minimal() +
+    theme_classic() +
     labs(
       title = "",
       x = "Coding Region",
@@ -106,7 +105,91 @@ plot_histogram_by_region <- function(region_summary) {
 mutation_all_without_plot <- plot_histogram_by_region(all_without_ct_summary)
 mutation_all_without_plot
 
-# Comparing all consecutive sequences: synonymous vs nonsynonymous changes ----------
+
+# Doing version per site -----
+# Normalize mutation counts by coding region length
+normalize_mutation_counts <- function(region_summary, coding_regions_df) {
+  # Add lengths of coding regions
+  coding_regions_df <- coding_regions_df %>%
+    mutate(region_length = end - start + 1)
+  
+  # Join region summary with coding regions length
+  normalized_summary <- region_summary %>%
+    left_join(coding_regions_df, by = "region") %>%
+    mutate(mutations_per_site = mutation_count / region_length)  # Calculate mutation rate
+  
+  return(normalized_summary)
+}
+normalized_summary <- normalize_mutation_counts(all_without_ct_summary, full_coding_regions)
+
+normalized_summary$region <- factor(
+  normalized_summary$region,
+  levels = full_coding_regions$region
+)
+
+plot_grouped_bars_by_region <- function(normalized_summary) {
+  ggplot(normalized_summary, aes(x = region, y = mutations_per_site, fill = major_scorpio_call)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
+    scale_fill_viridis_d(option = "D") +  # Applying Viridis colors
+    theme_classic() +
+    labs(
+      title = "",
+      x = "Coding Region",
+      y = "# Changes per Site",
+      fill = "Major Variant"
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "right"
+    )
+}
+
+# Generate the updated plot
+grouped_mutation_plot <- plot_grouped_bars_by_region(normalized_summary)
+grouped_mutation_plot
+
+
+# Collapsed for each gene ----
+# Collapse all variants into one by summarizing mutations per site for each gene
+collapsed_summary <- normalized_summary %>%
+  group_by(region) %>%
+  summarize(mutations_per_site = sum(mutations_per_site)) %>%
+  ungroup()
+
+# Set the order of regions to match the original gene dataframe
+collapsed_summary$region <- factor(
+  collapsed_summary$region,
+  levels = full_coding_regions$region
+)
+
+# Plot collapsed mutation rates
+plot_collapsed_bars_by_region <- function(collapsed_summary) {
+  ggplot(collapsed_summary, aes(x = region, y = mutations_per_site, fill = region)) +
+    geom_bar(stat = "identity", show.legend = FALSE) +
+    scale_fill_viridis_d(option = "D") +  # Applying Viridis colors
+    theme_classic() +
+    labs(
+      title = "",
+      x = "Coding Region",
+      y = "# Changes per Site"
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+}
+
+# Generate the collapsed plot
+collapsed_mutation_plot <- plot_collapsed_bars_by_region(collapsed_summary)
+collapsed_mutation_plot
+
+
+
+
+
+
+
+
+# Synonymous vs Nonsynonymous plot for all ----------------
 
 prepare_summary_data <- function(df) {
   # Check if necessary columns exist
@@ -195,11 +278,11 @@ print(total_counts)
 
 
 
-# Comparing only first and last sequences -----------
+# FIRST AND LAST ANALYSES -----------
 all_without_ct_changes_first_last_placements <- readRDS("")
 dnds_summary_dataframe_all_without_ct <- readRDS("")
 
-# Comparing only first and last sequences: Mutation locations ----------
+# FIRST AND LAST: Mutation locations ----------
 coding_regions_df <- data.frame(
   region = c("ORF1a", "ORF1b", "S", "ORF3a", "E", "M", "ORF6", "ORF7a", "ORF7b", "ORF8", "N", "ORF10"),
   start = c(266, 13468, 21563, 25393, 26245, 26523, 27202, 27394, 27756, 27894, 28274, 29558),
@@ -274,7 +357,7 @@ plot_histogram_by_region <- function(region_summary) {
   ggplot(region_summary, aes(x = region, y = mutation_count, fill = major_scorpio_call)) +
     geom_bar(stat = "identity", position = "stack") +
     scale_fill_viridis_d(option = "D") +  # Applying Viridis colors
-    theme_minimal() +
+    theme_classic() +
     labs(
       title = "",
       x = "Coding Region",
@@ -291,9 +374,11 @@ mutation_first_last_all_without_plot <- plot_histogram_by_region(all_without_ct_
 print(mutation_first_last_all_without_plot)
 
 
-# Commonly occurring mutations, comparing only first and last sequences ---------
 
-mutation_aa_counts <- read.xlsx("mutation_counts_by_type.xlsx")
+
+# Commonly occurring mutations ---------
+
+mutation_aa_counts <- read.xlsx("") #From recurrent_mutations
 
 mutation_aa_counts <- mutation_aa_counts %>%
   mutate(Region = sub(":.*", "", Amino.acid.change),  # Extract region before the colon
@@ -310,21 +395,24 @@ mutation_aa_counts$Amino.acid.change <- factor(mutation_aa_counts$Amino.acid.cha
 
 aa_change_plot <- ggplot(mutation_aa_counts, aes(x = Amino.acid.change, y = Count, fill = Region)) +
   geom_bar(stat = "identity") +
-  geom_text(aes(label = Count), vjust = -0.5, size = 3) +  
+  geom_text(aes(label = Count), vjust = -0.5, size = 3) +  # Add count labels on top of bars
   scale_fill_viridis_d(option = "D", begin = 0.2, end = 0.8, direction = 1) +  # Green to purple range
-  labs(y = "Counts", x = "Amino Acid Change") +
-  theme_minimal() +
+  labs(y = "Counts", x = "AA Change") +
+  theme_classic() +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1), 
-    legend.position = c(0.5, 0.9),  
-    legend.justification = c("center", "top"),  
-    legend.direction = "horizontal",  
-    legend.box = "horizontal",  
-    legend.spacing.x = unit(0.5, "cm")  
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+    legend.position = c(0.5, 0.9),  # Place legend inside the plotting area
+    legend.justification = c("center", "top"),  # Center the legend horizontally
+    legend.direction = "horizontal",  # Make the legend horizontal
+    legend.box = "horizontal",  # Use horizontal box layout for the legend
+    legend.spacing.x = unit(0.5, "cm")  # Adjust spacing between legend items
   )
 
 
-# Comparing only first and last sequences: Synonymous and non-synonymous locations ----------
+
+
+
+# FIRST AND LAST: Synonymous and non-synonymous locations ----------
 prepare_summary_data <- function(df) {
   # Check if necessary columns exist
   if (!"region" %in% colnames(df)) {
@@ -390,7 +478,7 @@ print(first_last_plot_synonymous_nonsynonymous)
 first_last_plot_synonymous_nonsynonymous <- ggplot(first_last_plot_synonymous_nonsynonymous, aes(x = region, y = count, fill = mutation_type)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_viridis_d(option = "D") +
-  theme_minimal(base_size = 10) +
+  theme_classic() +
   labs(
     title = "",
     x = "Coding Region",
@@ -414,21 +502,28 @@ first_last_plot_synonymous_nonsynonymous <- ggplot(first_last_plot_synonymous_no
 
 
 
-# Comparing only first and last sequences: Number of changes plotted against infection duration ----------
+# FIRST AND LAST: Average rate vs infection duration ----------
 all_without_ct_changes_first_last_placements <- readRDS("")
 
-#  Filter out rows with total_change_count = 0
+# Step 2: Filter out rows with total_change_count = 0
 filtered_data <- all_without_ct_changes_first_last_placements %>%
   filter(total_change_count > 0)
 
-# Prepare data with log transformations
+# Step 3: Prepare data with log transformations
 filtered_data <- filtered_data %>%
   mutate(
     log_days_between_sequences = log(total_days_between_sequences),  # Using natural log
     log_change_count = log(total_change_count)  # Using natural log
   )
 
-# Fit a linear-log model without zeros
+correlation_result <- cor(filtered_data$log_days_between_sequences, 
+                          filtered_data$log_change_count, 
+                          use = "complete.obs")  # Use complete observations (ignore NAs)
+
+# Print the correlation result
+print(correlation_result)
+
+# Step 4: Fit a linear-log model without zeros
 linear_log_model_no_zeros <- brm(
   formula = log_change_count ~ log_days_between_sequences,
   data = filtered_data,
@@ -439,7 +534,7 @@ linear_log_model_no_zeros <- brm(
   seed = 123
 )
 
-# Fit a quadratic-log model without zeros
+# Step 5: Fit a quadratic-log model without zeros
 quadratic_log_model_no_zeros <- brm(
   formula = log_change_count ~ log_days_between_sequences + I(log_days_between_sequences^2),
   data = filtered_data,
@@ -450,25 +545,28 @@ quadratic_log_model_no_zeros <- brm(
   seed = 123
 )
 
-# Compute PSIS-LOO with moment matching if needed
+# Step 6: Compute PSIS-LOO with moment matching if needed
 loo_linear_log_no_zeros <- loo(linear_log_model_no_zeros, moment_match = TRUE)
 loo_quadratic_log_no_zeros <- loo(quadratic_log_model_no_zeros, moment_match = TRUE)
 
-# Compare models
+# Step 7: Compare models
 comparison_no_zeros <- loo_compare(loo_linear_log_no_zeros, loo_quadratic_log_no_zeros)
 print(comparison_no_zeros)
 
-# Create a new data frame for predictions based on the log-transformed variable
+# Step 8: Create a new data frame for predictions based on the log-transformed variable
 new_data_log_no_zeros <- data.frame(
   log_days_between_sequences = seq(min(filtered_data$log_days_between_sequences, na.rm = TRUE),
                                    max(filtered_data$log_days_between_sequences, na.rm = TRUE),
                                    length.out = 100)
 )
 
-# Get predictions from the quadratic log model without zeros
+# Step 9: Get predictions from the linear log model without zeros
+new_data_log_no_zeros$predicted_log_linear_changes <- fitted(linear_log_model_no_zeros, newdata = new_data_log_no_zeros, re_formula = NA, scale = "response")[, "Estimate"]
+
+# Step 10: Get predictions from the quadratic log model without zeros
 new_data_log_no_zeros$predicted_log_quadratic_changes <- fitted(quadratic_log_model_no_zeros, newdata = new_data_log_no_zeros, re_formula = NA, scale = "response")[, "Estimate"]
 
-# Plot the log-transformed data with the model fits
+# Step 11: Plot the log-transformed data with the model fits
 log_changes_time_plot_excluding_zeros <- ggplot(filtered_data, aes(x = log_days_between_sequences, y = log_change_count)) +
   geom_point(alpha = 0.5) +  # Scatter plot of the data
   geom_line(data = new_data_log_no_zeros, aes(x = log_days_between_sequences, y = predicted_log_quadratic_changes), color = 'darkslateblue', linewidth=1) +  # Quadratic fitted line
@@ -486,32 +584,96 @@ print(correlation_result)
 
 
 
-# Combined  figure --------------------
+
+
+
+
+
+
+# Tip length analysis -----------
+tip_lengths_df <- readRDS(file= "") #From tip_length_analysis folder and file
+
+filtered_data <- tip_lengths_df %>%
+  filter(Type %in% c("Case", "Control"))
+
+# Step 2: Create bins for 'Length * 29891' (0-1, 1-2, ..., 49-50)
+filtered_data$bin <- cut(filtered_data$Length * 29891, breaks = seq(0, 50, by = 1), right = FALSE, labels = paste0(seq(0, 49)))
+
+# Step 3: Count observations in each bin for 'Case' and 'Control'
+bin_counts <- filtered_data %>%
+  group_by(bin, Type) %>%
+  summarise(count = n(), .groups = 'drop')
+
+# Step 4: Normalize the counts by dividing by the total counts for each 'Type' group
+bin_counts <- bin_counts %>%
+  group_by(Type) %>%
+  mutate(proportion = count / sum(count))
+
+# View the binned data and proportions
+print(bin_counts)
+
+# Step 5: Plot the results
+histogram <- ggplot(bin_counts, aes(x = bin, y = proportion, fill = Type)) +
+  geom_bar(stat = "identity", position = "identity", alpha = 0.7) +
+  labs(
+    title = "",
+    x = "Tip Length (Nucleotide Substitutions)",
+    y = "Proportion",
+    fill = "Group"
+  ) +
+  scale_x_discrete(name = "Tip Length (Nucleotide Substitutions)") +
+  scale_fill_viridis_d(name = "Group", option = "viridis") +
+  theme_classic(base_size = 12) +
+  theme(
+    legend.position = c(0.85, 0.85),  # Position the legend inside the plot area (top-right corner)
+    legend.background = element_rect(fill = alpha("white", 0.5), color = "black"),  # Optional: background for the legend
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+
+
+
+
+# Combined  plot --------------------
+
 # Combine the plots
 mutation_and_rate_combined_plot <- ggarrange(
-  mutation_first_last_all_without_plot,                # Plot 1
-  first_last_plot_synonymous_nonsynonymous,           # Plot 2
-  aa_change_plot,                                      # Plot 3
-  log_changes_time_plot_excluding_zeros,              # Plot 4
-  ncol = 2,                                           # Number of columns
-  nrow = 2,
-  labels = c("a)", "b)", "c)", "d)"),
-  # Number of rows
-  heights = c(1, 1)                               # Equal heights for all rows
+  # First row (a and b)
+  ggarrange(
+    mutation_first_last_all_without_plot,                
+    first_last_plot_synonymous_nonsynonymous,            
+    ncol = 2,                                            
+    labels = c("a", "b")
+  ),
+  # Second row (c and d)
+  ggarrange(
+    collapsed_mutation_plot,
+    aa_change_plot,
+    ncol = 2,                                           
+    labels = c("c", "d")
+  ),
+  # Third row (e and f)
+  ggarrange(
+    log_changes_time_plot_excluding_zeros,
+    histogram,
+    ncol = 2,                                            
+    labels = c("e", "f")
+  ),
+  ncol = 1,  # Align the three rows vertically
+  heights = c(1, 0.8, 1)  # Adjust the heights of the rows
 )
 
 # Print the combined plot
 print(mutation_and_rate_combined_plot)
 
-ggsave("", 
+ggsave("mutation_and_rate_combined_plot.pdf", 
        plot = mutation_and_rate_combined_plot, 
        device = "pdf", 
-       width = 10,        # Width in inches
-       height = 7.5,      # Height in inches
+       width = 9,        # Width in inches
+       height = 12,      # Height in inches
        dpi = 300)        # Resolution
 
-
-# Combined supplementary figure --------------------
 supplementary_mutation_and_rate_combined_plot <- ggarrange(
   mutation_all_without_plot,  # First plot
   plot_all_without_ct,        # Second plot
@@ -520,7 +682,7 @@ supplementary_mutation_and_rate_combined_plot <- ggarrange(
   nrow = 1                    # Number of rows
 )
 
-ggsave("", 
+ggsave("supplementary_mutation_and_rate_combined_plot.pdf", 
        plot = supplementary_mutation_and_rate_combined_plot, 
        device = "pdf", 
        width = 8,      
