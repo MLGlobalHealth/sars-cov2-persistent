@@ -12,11 +12,14 @@ The presented code aims to reproduce the analyses from "Within-host dynamics and
 
 * ```case_control_code```: Code used for preparing data and running the case control study.
 * ```defining_snp_thresholds```: Contains code to identify the false-positive rates at different rare SNP thresholds.
-* ```figures```: Contains code that leads to the three main figures in the article.
+* ```dnds```: Code to conduct dnds/kaks analyses.
+* ```figures```: Contains code that leads to the four main figures in the article.
 * ```identifying_persistent_infections```: Code used to identify persistent infections from the full set of sequences.
-* ```identifying_substitutions_and_mutations```: Code used to identify the placement of mutations and non-synonymous changes, as well as analyzing the associaiton between different risk factors and diagnoses with the rate of (non)synonymous change.
-* ```rebounding```: Code to analysze the occurrence fo rebounding among persitent infections.
+* ```identifying_substitutions_and_mutations```: Code used to identify the placement of mutations and non-synonymous changes, as well as analyzing the association between different risk factors and diagnoses with the rate of (non)synonymous change.
+* ```identical_sequences```: Code to analyze the distance between the final persistent infection sequences and all other sequences in the database within 11 days.
+* ```rebounding```: Code to analyze the occurrence of rebounding among persistent infections.
 * ```recurrent_mutations```: Code to identify independently-occurring and recurrent mutations among persistent infections.
+* ```tip_length_analysis```: Code to analyze tip lengths for persistent versus control infections.
 
 All code is numbered in the intended order of use.
 
