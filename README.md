@@ -28,9 +28,6 @@ All code is numbered in the intended order of use.
 
 Due to the sensitive nature of the data, we cannot provide individual-level metadata or further metadata for the sequences.
 
-### Genomes
-
-FASTA files can be found here: X. Note that all sequences are de-identified due to privacy reasons.
 
 ## Software overview
 
