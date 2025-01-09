@@ -1,12 +1,12 @@
-# Within-host dynamics and risk factors for persistent SARS-CoV-2 infections
+# Large-scale genomic surveillance reveals immunosuppression drives mutation dynamics in persistent SARS-CoV-2 infections
 
-Code for "Within-host dynamics and risk factors for persistent SARS-CoV-2 infections"
+Code for "Large-scale genomic surveillance reveals immunosuppression drives mutation dynamics in persistent SARS-CoV-2 infections"
 
 Link to paper: To be added
 
 ## Overview
 
-The presented code aims to reproduce the analyses from "Within-host dynamics and risk factors for persistent SARS-CoV-2 infections". In brief, the goal of the code is to identify persistent infections, identify risk factors for persistent infections, analyze associated mutational patterns, and link health conditions to accelerated selective genetic changes in the virus.
+The presented code aims to reproduce the analyses from "Large-scale genomic surveillance reveals immunosuppression drives mutation dynamics in persistent SARS-CoV-2 infections". In brief, the goal of the code is to identify persistent infections, identify risk factors for persistent infections, analyze associated mutational patterns, and link health conditions to accelerated selective genetic changes in the virus.
 
 ## Folders
 
