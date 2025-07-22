@@ -108,7 +108,7 @@ gene_dnds <- ggplot(collapsed_gene_data, aes(x = collapsed_ka_ks)) +
   geom_vline(xintercept = 0, color = "black", linetype = "dashed", linewidth = 1) +  # Line at 0
   geom_vline(data = medians, aes(xintercept = median_ka_ks), 
              linetype = "solid", color="#1F968BFF", linewidth = 1) +  # Line at median with viridis color
-  facet_wrap(~ gene, scales = "free", nrow = 4, ncol = 3) +  
+  facet_wrap(~ gene, scales = "fixed", nrow = 4, ncol = 3) +  
   theme_bw() +
   labs(
     title = "",
@@ -275,7 +275,7 @@ gene_dnds_controls <- ggplot(collapsed_gene_data_controls, aes(x = collapsed_ka_
   geom_vline(xintercept = 0, color = "black", linetype = "dashed", linewidth = 1) +  # Line at 0
   geom_vline(data = medians_controls, aes(xintercept = median_ka_ks), 
              linetype = "solid", color="#1F968BFF", linewidth = 1) +  # Line at median with viridis color
-  facet_wrap(~ gene, scales = "free", nrow = 4, ncol = 3) +  # Facet by gene
+  facet_wrap(~ gene, scales = "fixed", nrow = 4, ncol = 3) +  # Facet by gene
   theme_bw() +
   labs(
     title = "",
@@ -394,7 +394,7 @@ combined_plot <- ggplot(combined_data, aes(x = collapsed_ka_ks, fill = Group)) +
   geom_vline(xintercept = 0, color = "black", linetype = "dashed", linewidth = 1) +  # Line at 0
   geom_vline(data = combined_medians, aes(xintercept = median_ka_ks, color = Group),
              linetype = "solid", linewidth = 1) +  # Median lines
-  facet_wrap(~ gene, scales = "free", nrow = 2, ncol = 2) +  # Automatically adjusts layout
+  facet_wrap(~ gene, scales = "fixed", nrow = 2, ncol = 2) +  # Automatically adjusts layout
   scale_fill_viridis_d(option = "D") +  # Use viridis colors for fill
   scale_color_viridis_d(option = "D") +  # Use viridis colors for lines
   geom_text(
