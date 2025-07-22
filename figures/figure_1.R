@@ -178,7 +178,7 @@ sequence_count_plot <- ggplot(sequence_counts_grouped, aes(x = num_sequences_gro
 
 
 
-# Plot F) Histograms of First - Last values ---------
+# Plot F) Spaghetti plot of First - Last values ---------
 two_or_more_all_without_ct_metadata <- all_without_ct_metadata %>%
   group_by(PERSON_ID, infection_episode) %>%
   filter(n() >= 2) %>%
@@ -193,56 +193,48 @@ two_or_more_all_without_ct_metadata <- all_without_ct_metadata %>%
   filter(n() >= 2) %>%
   ungroup()
 
-# Function to calculate the CT difference between the first and last days
-calculate_ct_difference <- function(df) {
-  df %>%
-    group_by(PERSON_ID, infection_episode) %>%
-    summarise(
-      first_ct = CT[which.min(days_since_first)],
-      last_ct = CT[which.max(days_since_first)],
-      ct_difference = first_ct - last_ct
-    ) %>%
-    ungroup()
-}
+ct_first_last_long <- two_or_more_all_without_ct_metadata %>%
+  group_by(PERSON_ID, infection_episode) %>%
+  arrange(DATESAMPLING) %>%
+  summarise(
+    first_ct = CT[1],
+    last_ct = CT[n()],
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = c(first_ct, last_ct),
+    names_to = "position",
+    values_to = "CT"
+  ) %>%
+  mutate(
+    position = recode(position,
+                      "first_ct" = "First Ct Value",
+                      "last_ct" = "Last Ct Value")
+  )
 
-# Function to create histogram of CT differences
-plot_ct_difference_histogram <- function(df) {
-  ggplot(df, aes(x = ct_difference)) +
-    geom_histogram(
-      binwidth = 1,
-      fill = viridis::viridis(1, option = "D")[1],  # Use purple from Viridis palette
-      color = "black",
-      alpha = 0.6  # Set transparency level
-    ) +
-    labs(
-      x = "Ct Value Difference (First - Last)",
-      y = "Counts"
-    ) +
-    theme_minimal() +
-    geom_vline(
-      xintercept = 0,
-      color = "black",
-      linewidth = 1.5  # Set the thickness of the vertical line
-    ) +
-    scale_y_continuous(breaks = scales::pretty_breaks())  # Ensure y-axis shows only integers
-}
+# Plot
+spaghetti_plot <- ggplot(ct_first_last_long, aes(x = position, y = CT, group = interaction(PERSON_ID, infection_episode))) +
+  geom_line(alpha = 0.4, color = "#440154") +
+  geom_point(size = 1.5, alpha = 0.7, color = "#440154") +
+  scale_y_reverse() +
+  labs(
+    x = "Sample",
+    y = "Ct Value"
+  ) +
+  theme_minimal()
 
-# Calculate differences and plot histograms
-all_without_ct_diff <- calculate_ct_difference(two_or_more_all_without_ct_metadata)
-# Generate histograms
-hist_all_without_ct_plot <- plot_ct_difference_histogram(all_without_ct_diff)
 
 
 
 # Combining plots --------
 combined_plot <- ggarrange(
   infection_duration_plot, duration_plot,
-  age_plot, sex_plot, sequence_count_plot, hist_all_without_ct_plot,
+  age_plot, sex_plot, sequence_count_plot, spaghetti_plot,
   ncol = 2, nrow = 3,
-  labels = c("a)", "b)", "c)", "d)", "e)", "f)"),
+  labels = c("A)", "B)", "C)", "D)", "E)", "F)"),
   common.legend = FALSE,
   align = "h",
-  widths = c(1, 1),  # Give column with infection_duration_plot slightly more space
+  widths = c(1, 1), 
   heights = c(1, 1, 1)  # Adjust row heights as needed
 )
 
