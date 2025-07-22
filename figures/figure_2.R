@@ -566,13 +566,23 @@ new_data_log_no_zeros$predicted_log_linear_changes <- fitted(linear_log_model_no
 # Step 10: Get predictions from the quadratic log model without zeros
 new_data_log_no_zeros$predicted_log_quadratic_changes <- fitted(quadratic_log_model_no_zeros, newdata = new_data_log_no_zeros, re_formula = NA, scale = "response")[, "Estimate"]
 
+pred_intervals <- fitted(quadratic_log_model_no_zeros, 
+                         newdata = new_data_log_no_zeros, 
+                         re_formula = NA, 
+                         scale = "response")
+
 # Step 11: Plot the log-transformed data with the model fits
 log_changes_time_plot_excluding_zeros <- ggplot(filtered_data, aes(x = log_days_between_sequences, y = log_change_count)) +
-  geom_point(alpha = 0.5) +  # Scatter plot of the data
-  geom_line(data = new_data_log_no_zeros, aes(x = log_days_between_sequences, y = predicted_log_quadratic_changes), color = 'darkslateblue', linewidth=1) +  # Quadratic fitted line
-  labs(title = "",
-       x = expression(Ln~(Total~Days~Between~Sequences)),  # Using natural log in axis label
-       y = expression(Ln~(Total~Change~Count))) +  # Using natural log in axis label
+  geom_point(alpha = 0.5) +
+  geom_ribbon(data = new_data_log_no_zeros, 
+              aes(x = log_days_between_sequences, ymin = lwr, ymax = upr),
+              fill = 'darkslateblue', alpha = 0.2,
+              inherit.aes = FALSE) +
+  geom_line(data = new_data_log_no_zeros, aes(x = log_days_between_sequences, y = predicted_log_quadratic_changes),
+            color = 'darkslateblue', linewidth = 1,
+            inherit.aes = FALSE) +
+  labs(x = expression(Ln~(Total~Days~Between~Sequences)),
+       y = expression(Ln~(Total~Change~Count))) +
   theme_minimal()
 
 correlation_result <- cor(filtered_data$log_days_between_sequences, 
